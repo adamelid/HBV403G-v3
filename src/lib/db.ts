@@ -1,5 +1,7 @@
 import { readFile } from 'fs/promises';
 import pg from 'pg';
+import { Department, Course } from '../types';
+import { departmentMapper, courseMapper } from './mappers';
 
 const SCHEMA_FILE = './sql/schema.sql';
 const DROP_SCHEMA_FILE = './sql/drop.sql';
@@ -66,7 +68,7 @@ export async function conditionalUpdate(
 
   const q = `
   UPDATE ${table} 
-    SET ${updates.join(', ')} 
+    SET ${updated.join(', ')} 
   WHERE 
     id = $1 
   RETURNING *
@@ -92,7 +94,7 @@ export async function getDepartments(): Promise<Array<Department>> {
     return null;
   }
 
-  const departments = departmentsMapper(result.rows).map((d) => {
+  const departments = departmentMapper(result.rows).map((d) => {
     delete d.courses;
     return d;
   });
@@ -117,7 +119,7 @@ export async function getDepartmentBySlug(
 }
 
 export async function deleteDEpartmentBySlug(Slug: string): Promise<boolean> {
-  const result = await query('DELETE FROM department WHERE slug =$1', [slug]);
+  const result = await query('DELETE FROM department WHERE slug =$1', [Slug]);
 
   if (!result) {
     return false;
@@ -151,7 +153,7 @@ export async function insertCourse(
   course;
   const result = await query(
     'INSERT INTO course (title, units, semester, level, url, department_id, course_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-    [title, units, semester, level, url, departmentId, courseId],
+    [title, units, semester, level, url, separtmentId, courseID],
     silent,
   );
 
@@ -168,7 +170,7 @@ export async function getCoursesByDepartmentId(
     return [];
   }
 
-  const courses = coursesMapper(result.rows);
+  const courses = courseMapper(result.rows);
 
   return courses;
 }
